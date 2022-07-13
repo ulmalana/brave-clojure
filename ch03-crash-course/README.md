@@ -9,7 +9,7 @@ Clojure recognizes two kinds of structure:
     * `1`
     * `"a string"`
     * `["this" "is" "vector"]`
-* ** Operations **
+* **Operations**
     * `(operator operand1 operand2 ... )`
     
 
