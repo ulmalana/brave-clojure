@@ -175,3 +175,137 @@ Integer, floats, ratios.
     * `contains?`
     * `get`
     * or the keyword
+
+## Functions
+
+### Calling functions
+* Syntax: `(operator operand1 operand2 ...operandn)`
+  ```
+          (+ 1 2 3 4)
+          (first [1 2 3 4])
+      
+          ((or + -) 1 2 3)
+          ; => 6
+      
+          ((and (= 1 1) +) 1 2 3)
+          ; => 6
+  ```
+      
+* Higher order function example: `map`
+    * `(map inc [0 1 2 3])` -> `(1 2 3 4)`
+* Clojure evaluates all arguments **recursively**.
+  ```
+        (+ (inc 199) (/ 100 (- 7 2)))
+            
+        (+ 200 (/ 100 (- 7 2)))
+            
+        (+ 200 (/ 100 5))
+            
+        (+ 200 20)
+            
+        200
+  ```
+### Function calls, Macro calls, and Special Forms
+
+Special forms (such as `if`) and Macros are for **implementing Clojure core functionality**. They **dont always evaluate their operands** and we **cant use them as arguments**.
+
+### Defining functions
+
+Functions are composed in five parts:
+1. `defn`
+2. function name
+3. docstring function description (optional, can be accessed with `(doc fn-name)`)
+4. parameters in brackets
+5. function body
+
+```
+    (defn test-function
+        "This is the description of test-function"
+        [param]
+        (str "halo, this is" param))
+```
+
+#### Function arity
+The number of arguments that a function can take.
+
+#### Arity overloading
+A function can support multiple arrity that will have different behaviour depending on the number of passed arguments.
+```
+    (defn multi-arity
+        ;; 3 arity and its body
+        ([first-arg second-arg third-arg]
+            (do-things first-arg second-arg third-arg))
+        
+        ;; 2 arity
+        ([first-arg second-arg]
+            (do-things first-arg second-arg))
+
+        ;;1 arity
+        ([first-arg]
+            (do-things first-arg)))
+```
+
+#### Variable-arity function
+We can define a function that can **take abritrary number of arguments (resr paramter)** with `&`. With `&`, all arguments will be put in a list.
+
+#### Mixing normal parameter with rest parameter
+
+We can mix normal parameters with rest parameters, but **rest parameter should be the last**.
+
+#### Destructuring functions
+Similar to pattern matching, we can destructure arguments of functions.
+
+```
+    ;; this function always return the first element, no matter how long the argument is.
+    (defn my-first
+        [[first-thing]]
+        first-thing)
+        
+    ;; this function only cares about the first two args, and ignores the rest
+    (defn take-two
+        [[x y & rest]]
+        (println (str "this is the first arg: " x))
+        (println (str "this is the second arg:" y))
+        (println (str "and the rest: "
+                     (clojure.string/join ", " rest))))
+```
+
+We can also destructure `maps`
+
+```
+    (defn location
+        [{lat :lat lng :lng}]
+        (println (str "latitude: " lat))
+        (println (str "longitude: " lng)))
+```
+
+### Anonymous function
+
+```
+    (fn [param-list]
+        function-body)
+```
+* **Example: **
+    * `((fn [x] (* x x)) 4)` -> `16`
+* **Compact version** of anonymous function with `#`:
+    * `(#(* % %) 4)` -> `16`
+    * `(#(* %1 %2) 4 5)` -> `20`
+    * `(#(identity %&) 1 :riz "hehe")` -> `(1 :riz "hehe")`
+    
+### Returning functions
+
+We can create a function that returns a function. The returned function is called **closure**. Example:
+
+```
+    (defn inc-maker
+        "create a custom incrementor"
+        [inc-by]
+        #(+ % inc-by))
+        
+    ;; caller function
+    (def inc3 (inc-maker 3))
+    
+    ;; call inc3
+    (inc3 7)
+    ; => 10
+```
