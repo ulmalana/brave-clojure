@@ -309,3 +309,40 @@ We can create a function that returns a function. The returned function is calle
     (inc3 7)
     ; => 10
 ```
+
+## Hit the Hobbit
+
+### `let`
+We can create new binding with `let`
+```
+    ;; bind x to 3
+    (let [x 3]
+        x)
+    ; => 3
+    
+    ;; bind identifier to result of certain function
+    (def name-list ["Ponggo" "Puppy" "Gatito"])
+    
+    (let [names (take 2 name-list)]
+        names)
+    ; => ("Ponggo" "Puppy")
+```
+
+### Loop
+```
+    (loop [iteration 0]
+        (println (str "Iteration " iteration))
+        (if (> iteration 3)
+            (println "Bye"
+            (recur (inc iteration)))))
+```
+### Regular expression
+
+We can create a regular expression with this syntax: `#"regulat-expression"`
+
+* Example
+    * `#"^left-"` = match strings starting with "left-"
+  
+### Reduce
+
+`reduce` function in Clojure is similar to **folding** in Haskell. Its purpose is to **process the elements of a collection to build a result**.
