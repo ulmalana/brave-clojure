@@ -181,3 +181,60 @@
       (if (> accumulated-size target)
         part
         (recur remaining (+ accumulated-size (:size (first remaining))))))))
+
+;;;;;; Exercise ;;;;;;;;;;;
+;; 1
+(str "this " "is " "str " "function")
+(vector 1 :name "morty")
+(list 45 "this" "is" {:a "list"})
+(hash-map :name "Naruto" :occupation "Hokage")
+(hash-set "a" "b" "b" "a")
+
+;; 2
+(defn centmentor
+  [num]
+  (+ num 100))
+
+;; 3
+(defn dec-maker
+  [num]
+  #(- % num))
+
+(def dec9 (dec-maker 9))
+
+;; 4
+(defn mapset
+  [f col]
+  (set (map f col)))
+
+;; 5
+(defn matching-part'
+  [part]
+  (if (clojure.string/starts-with? (:name part) "left-")
+    (vec (map #(hash-map :name (str (clojure.string/replace (:name part) #"^left-" "") "-" %)
+                         :size (:size part))
+              [1 2 3 4 5]))
+    [part]))
+
+(defn symmetrize-alien-body-parts
+  [asym-body-parts]
+  (reduce (fn [final-body-parts part]
+            (into final-body-parts (matching-part' part)))
+          []
+          asym-body-parts))
+
+;; 6 (generalized version of number 5)
+(defn matching-part''
+  [part n]
+  (if (clojure.string/starts-with? (:name part) "left-")
+    (vec (map #(hash-map :name (str (clojure.string/replace (:name part) #"^left-" "") "-" %)
+                         :size (:size part))
+              (take n (range 1 (+ 1 n)))))
+    [part]))
+
+(defn gen-sym-alien-body-parts
+  [asym-body-parts n]
+  (reduce (fn [final-body-parts part]
+            (into final-body-parts (matching-part'' part n)))
+            []
+            asym-body-parts))

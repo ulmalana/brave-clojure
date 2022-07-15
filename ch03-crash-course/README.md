@@ -285,7 +285,7 @@ We can also destructure `maps`
     (fn [param-list]
         function-body)
 ```
-* **Example: **
+* **Example:**
     * `((fn [x] (* x x)) 4)` -> `16`
 * **Compact version** of anonymous function with `#`:
     * `(#(* % %) 4)` -> `16`
@@ -346,3 +346,7 @@ We can create a regular expression with this syntax: `#"regulat-expression"`
 ### Reduce
 
 `reduce` function in Clojure is similar to **folding** in Haskell. Its purpose is to **process the elements of a collection to build a result**.
+
+## Excercise
+
+See `src/ch03_crash_course/core.clj`
