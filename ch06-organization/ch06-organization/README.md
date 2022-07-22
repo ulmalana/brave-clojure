@@ -124,3 +124,30 @@ We can use `defn-` function to create private functions that can be accessed onl
 
 ### `alias`
 `alias` is used to shorten a namespace.
+
+## Real Project Organization
+
+`ns` macro is the primary way to **create and manage namespaces**. It is similar to `in-ns` function but with many additional features.
+
+When we create a project with `lein`, all the code are placed in `src` directory. The structure inside `src` directory corresponds to the namespace. For example: `cheese-code.core` namespace corresponds to `src/cheese_code/core.clj` file.
+
+We can use `require` to import objects/functions from another namespace. Another way to import namespaces is with `use`. `use` can automatically `refer` the namespace so that we dont need to use its fully qualified name. However, `use` is **not recommended for production code**.
+
+### `ns` macro
+
+`ns` is the recommended way to manage namespace because it incorporates all the previously explained functions like `require`, `use`, `in-ns`, `alias`, and `refer`. It also refers `clojure.core` namespace by default, so we can use shorter name for core functions.
+
+There are six possible kinds of references in `ns`:
+* `(:refer-clojure)`
+* `(:require)` -> **similar to** `(require)` function
+* `(:use)`
+* `(:import)`
+* `(:load)`  -> **seldom used**
+* `(:gen-class)`
+
+The following snippet is one example of using `ns`:
+```
+(ns cheese-code.core
+    (:require [cheese-code.visualization.svg :as svg :refer [points]]
+              [clojure.java.browse :as browse]))
+```
