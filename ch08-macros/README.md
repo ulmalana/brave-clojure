@@ -90,3 +90,27 @@ Unquote splicing `~@` **unwraps a seqable data structure**, placing its contents
 `(+ ~@(list 1 2 3))
 ; => (clojure.core/+ 1 2 3)
 ```
+
+## Things to Watch Out For
+
+### Variable capture
+Variable capture occurs when a macro **introduces a binding that unknowingly eclipses an existing binding**. We can differentiate each binding with creating a new object with `gensym`:
+```
+(gensym 'message)
+; => message7986
+(gensym 'message)
+; => message7989 
+```
+Or, we can use **auto-gensym** by appending a hashtag `#` to a symbol within a syntax-quoted list. Clojure automatically resolves each instance of `#` to the same symbol.
+```
+`(hehe# hehe#)
+; => (hehe__7977__auto__ hehe__7977__auto__)
+`(hehe# 454)
+; => (hehe__7981__auto__ 454)
+```
+
+### Double Evaluation
+
+Double evaluation occurs when a form passed to a macro as an argument gets evaluated more than once. We can **bind the evaluated argument to an auto-gensym symbol**, which we can refer without reevaluating.
+
+

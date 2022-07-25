@@ -53,6 +53,36 @@
              [["Jolly Bee of Hawaii, this is bad code" bad]
               ["Gee this is good code:" good]])))
 
+;; variable capture
+(def message "Good job!")
+(defmacro with-mischief
+  [& stuff-to-do]
+  (concat (list 'let ['message "Oh big deal"])
+          stuff-to-do))
+
+(defmacro without-mischief
+  [& stuff-to-do]
+  (let [macro-message (gensym 'message)]
+    `(let [~macro-message "Oh big deal"]
+       ~@stuff-to-do
+       (println "I still need to say: " ~macro-message))))
+
+;; double evaluation
+;; to-try will be evaluated twice
+(defmacro report
+  [to-try]
+  `(if ~to-try
+     (println (quote ~to-try) "was successful:" ~to-try)
+     (println (quote ~to-try) "wasnt successful:" ~to-try)))
+
+;; bind to-try to result# and evaluate once
+(defmacro report'
+  [to-try]
+  `(let [result# ~to-try]
+     (if result#
+       (println (quote ~to-try) "was success:" result#)
+       (println (quote ~to-try) "wasnt success:" result#))))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
