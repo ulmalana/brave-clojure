@@ -1,4 +1,4 @@
- Chapter 08 - Macros
+# Chapter 08 - Macros
 
 ## Macros vs. Functions
 
