@@ -113,4 +113,8 @@ Or, we can use **auto-gensym** by appending a hashtag `#` to a symbol within a s
 
 Double evaluation occurs when a form passed to a macro as an argument gets evaluated more than once. We can **bind the evaluated argument to an auto-gensym symbol**, which we can refer without reevaluating.
 
+### Macros all the way down
+
+We can end up having to **write more and more macros to get anything done**. Take some time to rethink our approach.
+
 
