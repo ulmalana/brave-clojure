@@ -63,3 +63,39 @@ We can place a time limit on how long to wait for future by passing an additiona
 ```
 
 We can also check if the future is done computing with `realized?` function.
+
+### Delays
+
+We can use delays to **define a task without having to execute it or require the result immediately**. For forcing evaluation, we can use `force`, `deref`, or `@`. Delay is **only run once** and its result is cached.
+
+```
+(def jackson-5-delay
+  (delay (let [message "Just call my name and I'll be there"]
+           (println "First deref: " message)
+           message)))
+
+(force jacson-5-delay)
+; => First deref: Just call my name and I'll be there
+; => "Just call my name and I'll be there"
+
+@jackson-5-delay
+; => "Just call my name and I'll be there"
+```
+
+### Promises
+
+Promises let us expect a result **without** having to define the task that should produce it or when the task should run. To deliver the result, we can use `deliver` function.
+
+```
+(def my-promise (promise))
+(deliver my-promise (+ 1 2))
+@my-promise
+; => 3
+```
+
+We can only **deliver once**. When the derefence process takes a long time, we can set the time limit. In the example below, we will wait for 100 ms to derefencing and return "timed out" if it takes more than 100 ms:
+
+```
+(let [p (promise)]
+    (deref p 100 "timed out"))
+```
