@@ -182,7 +182,7 @@
        (commute counter (sleep-print-update 150 "Thread B" inc))))))
 
 (defn show-unsafe-commute
-  "This function shows how unsafe commute work [STILL CANT REPLICATE THE BOOK'S EXAMPLE]"
+  "This function shows how unsafe commute work. It will show that reveiver-a and receiver-b receives 1 from giver (it should be either of them, not both)  [ONLY WORKS WHEN WE INPUT THE COMMANDS ONE BY ONE]"
   []
   (let [receiver-a (ref #{})
         receiver-b (ref #{})
@@ -202,3 +202,44 @@
       (println (str "Receiver-a:" @receiver-a))
       (println (str "Receiver-b:" @receiver-b))
       (println (str "Giver: " @giver))))
+
+;; var ;;
+(def ^:dynamic *troll-thought* nil)
+(defn troll-riddle
+  [your-answer]
+  (let [number "man meat"]
+    (when (thread-bound? #'*troll-thought*)
+      (set! *troll-thought* number))
+    (if (= number your-answer)
+      "TROLL: You may cross the bridge"
+      "TROLL: Time to eat you")))
+
+;; parallelism with map
+(def alphabet-length 26)
+
+;; vector of chars, A-Z
+(def letters (mapv (comp str char (partial + 65)) (range alphabet-length)))
+
+(defn random-string
+  "Returns a random string of specified length"
+  [length]
+  (apply str (take length (repeatedly #(rand-nth letters)))))
+
+(defn random-string-list
+  [list-length string-length]
+  (doall (take list-length (repeatedly (partial random-string string-length)))))
+
+(def orc-names (random-string-list 3000 7000))
+(def orc-name-abbrevs (random-string-list 20000 300))
+
+;; `pmap` with partition
+(defn ppmap
+  "Partitioned pmap, for grouping map ops together to make parallel overhead worthwhile"
+  [grain-size f & colls]
+  (apply concat
+         (apply pmap
+                (fn [& pgroups] (doall (apply map f pgroups)))
+                (map (partial partition-all grain-size) colls))))
+
+;; run with
+;; (time (dorun (ppmap 1000 clojure.string/lower-case orc-name-abbrevs)))

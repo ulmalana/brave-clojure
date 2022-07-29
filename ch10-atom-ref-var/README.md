@@ -175,3 +175,86 @@ Now, for updating the refs value, we can use `alter`. `dosync` **intiates a tran
 
 ### Commute
 `commute` is similar to `alter` for updating the ref, but it doesnt force a transaction retry (`alter` force retry). This can improve the performance but **may result in invalid state**.
+
+## Var
+
+Vars are **associations between symbols and objects**, and are created with `def`. Usually `def` is used to define a constant, but we can define **dynamic vars** as well whose binding can be changed. Dynamic vars are useful for creating a global name that can refer to different values in different contexts.
+
+```
+;; create a dynamic var
+;; notice the ^:dynamic and enclosing **
+(def ^:dynamic *notification-address* "dobby@elf.org")
+```
+
+We can change the binding of dynamic vars *temporarily* using `binding`:
+```
+(binding [*notification-address* "test1@elf.org"]
+    (println *notification-address*)
+    (binding [*notification-address* "test2@elf.org"]
+        (println *notification-address*))
+    (println *notification-address*))
+; => test1@elf.org
+; => test2@elf.org
+; => test1@elf.org
+```
+
+Dynamic vars are most often used **to name a resource** that one or more functions target. For example `*out*` to represent the standard output for print operations. The snippet below shows how to rebind `*out*` to a file writer instead of the usual print operation. The contents will be saved in a file instead of displaying them.
+
+```
+(binding [*out* (clojure.java.io/writer "print-output")]
+    (println "This is the result of rebinding *out* to a writer, instead of the usual print"))
+
+;; check the result in print-output file
+(slurp "print-output")
+```
+
+We can use `set!` to rebind the dynamic vars to a new value.
+
+### Altering the Var Root
+
+When we create a var with `def`, its initial value is called its **root**. For example, the following var has `"four"` as its root. We can **permanently** change this root with `alter-var-root`. `alter-var-root` takes a function to change the root.
+```
+(def quad "four")
+
+;; change the value of quad from "four" to "empat"
+(alter-var-root #'quad (fn [_] "empat"))
+```
+
+## Stateless Concurrency and Parallelism with `pmap`
+
+`pmap` is the paralellized version of `map`. It handles the running of each application of mapping function on a separate thread. The following snippet compares the performance of `map` and `pmap` for transfroming thousands of very long strings.
+```
+(def alphabet-length 26)
+
+;; vector of chars, A-Z
+(def letters (mapv (comp str char (partial + 65)) (range alphabet-length)))
+
+(defn random-string
+  "Returns a random string of specified length"
+  [length]
+  (apply str (take length (repeatedly #(rand-nth letters)))))
+
+(defn random-string-list
+  [list-length string-length]
+  (doall (take list-length (repeatedly (partial random-string string-length)))))
+
+(def orc-names (random-string-list 3000 7000))
+
+(time (dorun (map clojure.string/lower-case orc-names)))
+; => "Elapsed time: 339.936864 msecs"
+
+;; pmap is faster than map
+ch10-atom-ref-var.core> (time (dorun (pmap clojure.string/lower-case orc-names)))
+; => "Elapsed time: 256.386671 msecs"
+```
+
+In some cases, `pmap` is **slower** than `map` because of the **overhead for thread coordination**. The solution to this is to increase the *grain size* or *batch size* (so each thread has more works). By default, the grain size is **1**, and we can increase it by partitioning the collection with `partition-all`. 
+```
+(def numbers [1 2 3 4 5 6 7 8 9 10])
+
+;; partition the numbers into a group of 3
+(partition-all 3 numbers)
+; => ((1 2 3) (4 5 6) (7 8 9) (10))
+```
+
+See `ppmap` function in `core.clj` for the definition of `pmap` that support partitioning.
