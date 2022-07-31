@@ -68,3 +68,121 @@ There are times when blocking is preferable than parking and we can use `thread`
 ```
 
 If we want to perform a long running task, `go` **may use all of our threads** and we cant continue working. So it is preferable to use `thread` which to use one thread even thoug it does blocking. In short, use `go` for parking which could improve performance, and use `thread` for long-running tasks.
+
+## Hot Dog Machine Process
+
+Lets create a hot dog machine:
+```
+;; hot dog machine
+(defn hot-dog-machine
+  []
+  (let [in (chan)
+        out (chan)]
+    (go (<! in) ; take money in
+        (>! out "hot dog")) ; return a hotdog
+    [in out])) ; return in and out channel
+```
+In the definition above, there is no input validation, so we can put anything and get a hotdog
+```
+(let [[in out] (hot-dog-machine)]
+    (>!! in "pocket lint")
+    (<!! out))
+
+; => "hot dog"
+```
+Lets create the better version
+
+```
+;; better version of hot dog machine
+(defn hot-dog-machine-v2
+  [hot-dog-count]
+  (let [in (chan)
+        out (chan)]
+    (go (loop [hc hot-dog-count]
+          ;; if hotdog is still available
+          (if (> hc 0)
+            (let [input (<! in)]
+              (if (= 3 input)
+                (do (>! out "hot dog")
+                    (recur (dec hc)))
+                (do (>! out "wilted lettuce")
+                    (recur hc))))
+            ;; if no hotdog left, close the channel
+            (do (close! in)
+                (close! out)))))
+    [in out]))
+```
+In above version, we set the hotdog price `3` and also set how many hotdogs we have in our store. If sold out, then return nil.
+```
+(let [[in out] (hot-dog-machine-v2 2)]
+    ;; buy without money
+    (>!! in "pocket lint")
+    (println (<!! out))
+    
+    ;; buy one
+    (>!! in 3)
+    (println (<!! out))
+    
+    ;; buy another
+    (>!! in 3)
+    (println (<!! out))
+    
+    ;; buy the third. but since there are only two and already sold out, we will get nothing
+    (>!! in 3)
+    (<!! out))
+
+; => wilted lettuce
+; => hot dog
+; => hot dog
+; => nil
+```
+
+We can create a pipeline of processes with put and take:
+```
+(let [c1 (chan) ;; create three channels
+      c2 (chan)
+      c3 (chan)]
+  ;; take c1, uppercase it, and put in c2
+  (go (>! c2 (clojure.string/upper-case (<! c1))))
+
+  ;; take c2, reverse it, and put in c3
+  (go (>! c3 (clojure.string/reverse (<! c2))))
+
+  ;; take c3 and print it
+  (go (println (<! c3)))
+
+  ;; put something in c1
+  (>!! c1 "redrum"))
+
+; => MURDER
+```
+
+## `alts!!`
+
+`alts!!` function allows us to use **the result of the first successful channel operation** among a collection of operations. The other channels are still available if we want to take their values.
+```
+(let [c1 (chan)
+      c2 (chan)
+      c3 (chan)]
+  (upload "serious.jpg" c1)
+  (upload "fun.jpg" c2)
+  (upload "sassy.jpg" c3)
+  
+  ;; choose the first result from these channels 
+  (let [[headshot channel] (alts!! [c1 c2 c3])]
+    (println "Sending headshot notification for" headshot)))
+; => Sending headshot notification for sassy.jpg
+```
+
+We can also set a **timeout** to channels in `alts!!` so we have a time limit on concurrent operations
+
+```clj
+(let [c1 (chan)]
+  (upload "sad.jpg" c1)
+  (let [[headshot channel] (alts!! [c1 (timeout 20)])]
+    (if headshot
+      (println "Sending headshot notification for " headshot)
+      (println "Timed out"))))
+
+; => Timed out
+```
